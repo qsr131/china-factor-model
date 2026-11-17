@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>中国因子模型数据</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#f5f7fa; color:#1f2329; }
+.app-shell { max-width:420px; margin:0 auto; min-height:100vh; background:#f5f7fa; position:relative; box-shadow:0 0 40px rgba(0,0,0,0.08); }
+.nav-bar { background:#1a1a2e; color:#fff; text-align:center; padding:14px 16px; font-size:17px; font-weight:600; position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:center; }
+.nav-back { position:absolute; left:12px; cursor:pointer; font-size:22px; color:#fff; opacity:0.8; padding:4px 8px; }
+.nav-back:hover { opacity:1; }
+.page { display:none; padding:12px 12px 32px; }
+.page.active { display:block; }
+.header { text-align:center; padding:24px 0; }
+.app-title { font-size:24px; font-weight:700; color:#1a1a2e; }
+.app-subtitle { display:block; margin-top:6px; font-size:13px; color:#8a8f99; }
+.source-card { display:flex; align-items:center; padding:16px; border-radius:12px; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:12px; cursor:pointer; transition:transform 0.15s; }
+.source-card:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+.source-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.cufe-icon { background:linear-gradient(135deg,#667eea,#764ba2); }
+.mingshi-icon { background:linear-gradient(135deg,#f093fb,#f5576c); }
+.boll-icon { background:linear-gradient(135deg,#11998e,#38ef7d); }
+.cmp-icon { background:linear-gradient(135deg,#2563eb,#60a5fa); }
+.icon-text { font-size:14px; font-weight:700; color:#fff; }
+.source-info { flex:1; margin-left:12px; overflow:hidden; }
+.source-name { font-size:16px; font-weight:600; }
+.source-model { display:block; margin-top:3px; font-size:14px; color:#1769e0; font-weight:500; }
+.source-desc { display:block; margin-top:3px; font-size:12px; color:#8a8f99; }
+.source-update { display:block; margin-top:4px; font-size:11px; color:#bbb; }
+.arrow { flex-shrink:0; padding-left:8px; font-size:18px; color:#c0c4cc; }
+.info-section { padding:16px; border-radius:12px; background:#fff; margin-top:8px; }
+.info-title { font-size:15px; font-weight:600; }
+.info-text { display:block; margin-top:8px; font-size:13px; color:#646a73; line-height:1.7; }
+.footer { margin-top:24px; text-align:center; }
+.footer-text { font-size:11px; color:#bbb; }
+.meta-card { padding:14px; border-radius:12px; background:#fff; margin-bottom:10px; }
+.meta-source { font-size:16px; font-weight:600; }
+.meta-model { display:block; margin-top:4px; font-size:14px; font-weight:500; }
+.meta-model.cufe { color:#1769e0; }
+.meta-model.mingshi { color:#f5576c; }
+.meta-model.boll { color:#11998e; }
+.meta-desc { display:block; margin-top:8px; font-size:12px; color:#8a8f99; line-height:1.6; }
+.meta-row { display:flex; justify-content:space-between; margin-top:8px; }
+.meta-label { font-size:13px; color:#8a8f99; }
+.meta-value { font-size:13px; font-weight:500; }
+.model-bar,.tab-bar,.range-bar { display:flex; border-radius:8px; background:#e8eaed; overflow:hidden; margin-bottom:8px; }
+.model-item,.tab-item,.range-item { flex:1; text-align:center; cursor:pointer; }
+.model-item { padding:8px 0; font-size:14px; color:#646a73; }
+.tab-item { padding:8px 0; font-size:14px; color:#646a73; }
+.range-item { padding:6px 0; font-size:12px; color:#646a73; }
+.model-active { background:#fff; color:#f5576c; font-weight:600; }
+.tab-active { background:#fff; color:#1769e0; font-weight:600; }
+.range-active { background:#fff; color:#1769e0; font-weight:600; }
+.range-active.mingshi { color:#f5576c; }
+.range-active.boll { color:#11998e; }
+.tab-item.disabled { color:#ccc; cursor:not-allowed; }
+.factor-bar { display:flex; flex-wrap:wrap; margin-bottom:8px; }
+.factor-chip { display:flex; align-items:center; margin:0 6px 6px 0; padding:5px 10px; border-radius:15px; background:#fff; border:1px solid #e5e8eb; cursor:pointer; }
+.factor-selected.cufe { border-color:#1769e0; background:#eaf2ff; }
+.factor-selected.mingshi { border-color:#f5576c; background:#fde8ec; }
+.factor-selected.boll { border-color:#11998e; background:#e0f7ef; }
+.factor-dot { width:8px; height:8px; border-radius:50%; margin-right:4px; }
+.factor-chip-text { font-size:11px; white-space:nowrap; }
+.select-row { display:flex; align-items:center; margin-bottom:8px; background:#fff; border-radius:8px; padding:8px 12px; font-size:12px; }
+.select-label { color:#646a73; margin-right:8px; white-space:nowrap; }
+select.styled-select { flex:1; padding:4px 8px; border:1px solid #e5e8eb; border-radius:6px; font-size:12px; background:#fff; color:#1f2329; outline:none; cursor:pointer; }
+select.styled-select:focus { border-color:#1769e0; }
+.chart-card { padding:8px; border-radius:12px; background:#fff; margin-bottom:8px; }
+.chart-canvas { width:100%; height:280px; display:block; }
+.boll-chart-canvas { width:100%; height:300px; display:block; }
+.legend { display:flex; flex-wrap:wrap; margin-bottom:10px; padding:0 6px; }
+.legend-item { display:flex; align-items:center; margin-right:12px; margin-bottom:4px; }
+.legend-dot { width:10px; height:10px; border-radius:50%; margin-right:4px; flex-shrink:0; }
+.legend-name { font-size:11px; color:#646a73; }
+.table-card { padding:12px; border-radius:12px; background:#fff; margin-bottom:10px; }
+.table-title { font-size:14px; font-weight:600; margin-bottom:8px; display:block; }
+.table-header,.table-row { display:flex; }
+.table-header { border-bottom:2px solid #e5e8eb; padding-bottom:6px; }
+.table-row { border-bottom:1px solid #f5f5f5; padding:6px 0; }
+.th,.td { flex:1; text-align:right; font-size:12px; }
+.th { color:#8a8f99; font-weight:500; }
+.td { color:#1f2329; }
+.th-date,.td-date { flex:1.2; text-align:left; }
+.td-date { color:#646a73; }
+.td-pos { color:#e74c3c; }
+.td-neg { color:#2ecc71; }
+.source-link { text-align:center; padding:10px; cursor:pointer; }
+.source-link-text { font-size:11px; color:#bbb; display:block; }
+.copy-hint { font-size:10px; margin-top:2px; display:block; }
+.copy-hint.cufe { color:#1769e0; }
+.copy-hint.mingshi { color:#f5576c; }
+.note-text { font-size:11px; color:#bbb; padding:8px 12px; line-height:1.5; }
+.boll-stats-card { padding:12px; border-radius:12px; background:#fff; margin-bottom:8px; font-size:12px; }
+.boll-stats-row { display:flex; justify-content:space-between; margin-top:6px; }
+.boll-stats-label { color:#8a8f99; }
+.boll-stats-value { font-weight:500; }
+/* --- inline compare overlay --- */
+#cmpOverlay { position: fixed; inset: 0; z-index: 2000; display: none; background: rgba(15,18,25,.55); }
+#cmpOverlay.on { display: block; }
+#cmpOverlay .frame-wrap { position: absolute; inset: 0; background: #fff; }
+#cmpFrame { width: 100%; height: 100%; border: 0; display: block; }
+#cmpClose { position: absolute; right: 14px; top: 10px; z-index: 2100; border: 0; cursor: pointer;
+  background: rgba(26,26,46,.9); color: #fff; border-radius: 999px; padding: 8px 14px; font-size: 13px; }
+#cmpClose:hover { background: #1a1a2e; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+    <div class="nav-bar">
+        <span class="nav-back" id="navBack" style="display:none;" onclick="goBack()">&lsaquo;</span>
+        <span id="navTitle">中国因子模型数据</span>
+    </div>
+
+    <!-- Index -->
+    <div class="page active" id="page-index">
+        <div class="header">
+            <div class="app-title">中国因子模型数据</div>
+            <span class="app-subtitle">展示最新学术因子模型时序数据 · v2</span>
+        </div>
+        <div class="source-card" onclick="navigateTo('cufe')">
+            <div class="source-icon cufe-icon"><span class="icon-text">CUFE</span></div>
+            <div class="source-info">
+                <div class="source-name">中央财经大学</div>
+                <span class="source-model">FF 五因子模型</span>
+                <span class="source-desc">市场超额收益 / 规模 / 价值 / 动量 / 盈利 / 投资</span>
+                <span class="source-update">更新至 2026-10</span>
+            </div>
+            <span class="arrow">&rsaquo;</span>
+        </div>
+        <div class="source-card" onclick="navigateTo('mingshi')">
+            <div class="source-icon mingshi-icon"><span class="icon-text">MS</span></div>
+            <div class="source-info">
+                <div class="source-name">鸣石基金</div>
+                <span class="source-model">CH-3 / CH-4 因子模型</span>
+                <span class="source-desc">市场超额收益 / 规模 / 价值 / 动量</span>
+                <span class="source-update">更新至 2026-08</span>
+            </div>
+            <span class="arrow">&rsaquo;</span>
+        </div>
+        <div class="source-card" onclick="navigateTo('boll')">
+            <div class="source-icon boll-icon"><span class="icon-text">BOLL</span></div>
+            <div class="source-info">
+                <div class="source-name">布林带分析</div>
+                <span class="source-model">均值 ± 2 标准差</span>
+                <span class="source-desc">各因子历史波动范围可视化</span>
+                <span class="source-update">独立页面</span>
+            </div>
+            <span class="arrow">&rsaquo;</span>
+        </div>
+        <div class="source-card" onclick="openCompare()">
+            <div class="source-icon cmp-icon"><span class="icon-text">×IF</span></div>
+            <div class="source-info">
+                <div class="source-name">指数 × 因子 对比分析</div>
+                <span class="source-model">大盘指数走势 × 因子收益</span>
+                <span class="source-desc">双轴折线 / 散点相关 / 滚动相关 · 因子公式 · 显著性检验（1−p 柱）· 宽基与行业指数</span>
+                <span class="source-update">独立页面</span>
+            </div>
+            <span class="arrow">&rsaquo;</span>
+        </div>
+        <div class="info-section">
+            <div class="info-title">关于因子模型</div>
+            <span class="info-text">因子模型是资产定价的核心工具，用于解释股票收益的来源。本应用展示两个权威数据源的最新因子收益时序数据，以面积图形式直观呈现各因子的历史走势，并附带"均值±2标准差"布林带展示因子波动范围。</span>
+        </div>
+        <div class="footer"><span class="footer-text">数据来源：中央财经大学金融学院 / 鸣石基金 / 东方财富（指数行情）</span></div>
+    </div>
+
+    <!-- CUFE -->
+    <div class="page" id="page-cufe">
+        <div class="meta-card">
+            <div class="meta-source">中央财经大学金融学院</div>
+            <span class="meta-model cufe" id="cufe-model">FF 五因子模型</span>
+            <span class="meta-desc" id="cufe-desc"></span>
+            <div class="meta-row"><span class="meta-label">数据频率</span><span class="meta-value" id="cufe-freq">月度</span></div>
+            <div class="meta-row"><span class="meta-label">最新数据</span><span class="meta-value" id="cufe-update"></span></div>
+            <div class="meta-row"><span class="meta-label">数据条数</span><span class="meta-value" id="cufe-count"></span></div>
+        </div>
+        <div class="tab-bar">
+            <div class="tab-item tab-active" data-freq="monthly" onclick="cufeSwitchFreq('monthly')">月度</div>
+            <div class="tab-item" data-freq="daily" onclick="cufeSwitchFreq('daily')">日度</div>
+        </div>
+        <div class="range-bar">
+            <div class="range-item" data-range="0" onclick="cufeSwitchRange(0)">全部</div>
+            <div class="range-item" data-range="1" onclick="cufeSwitchRange(1)">近5年</div>
+            <div class="range-item range-active" data-range="2" onclick="cufeSwitchRange(2)">近2年</div>
+            <div class="range-item" data-range="3" onclick="cufeSwitchRange(3)">近1年</div>
+        </div>
+        <div class="factor-bar" id="cufe-factors"></div>
+        <div class="select-row">
+            <span class="select-label">面积图模式</span>
+            <select class="styled-select" id="cufe-chart-mode" onchange="cufeRender()">
+                <option value="area">面积图（不重叠）</option>
+                <option value="stacked">堆积面积图</option>
+                <option value="percent">百分比堆积面积图</option>
+            </select>
+        </div>
+        <div class="chart-card"><canvas class="chart-canvas" id="cufe-chart"></canvas></div>
+        <div class="legend" id="cufe-legend"></div>
+        <div class="table-card">
+            <span class="table-title" id="cufe-table-title">最近 10 期数据</span>
+            <div class="table-header" id="cufe-table-header"></div>
+            <div id="cufe-table-body"></div>
+        </div>
+        <div class="source-link" onclick="copyLink('cufe')">
+            <span class="source-link-text" id="cufe-source-url"></span>
+            <span class="copy-hint cufe">点击复制链接</span>
+        </div>
+    </div>
+
+    <!-- Mingshi -->
+    <div class="page" id="page-mingshi">
+        <div class="meta-card">
+            <div class="meta-source">鸣石基金</div>
+            <span class="meta-model mingshi" id="ms-model"></span>
+            <span class="meta-desc" id="ms-desc"></span>
+            <div class="meta-row"><span class="meta-label">数据频率</span><span class="meta-value" id="ms-freq">月度</span></div>
+            <div class="meta-row"><span class="meta-label">最新数据</span><span class="meta-value" id="ms-update"></span></div>
+            <div class="meta-row"><span class="meta-label">数据条数</span><span class="meta-value" id="ms-count"></span></div>
+        </div>
+        <div class="model-bar">
+            <div class="model-item model-active" data-model="ch3" onclick="msSwitchModel('ch3')">CH-3 三因子</div>
+            <div class="model-item" data-model="ch4" onclick="msSwitchModel('ch4')">CH-4 四因子</div>
+        </div>
+        <div class="tab-bar" id="ms-freq-bar">
+            <div class="tab-item tab-active" data-freq="monthly" onclick="msSwitchFreq('monthly')">月度</div>
+            <div class="tab-item" data-freq="daily" onclick="msSwitchFreq('daily')">日度</div>
+        </div>
+        <div class="range-bar">
+            <div class="range-item" data-range="0" onclick="msSwitchRange(0)">全部</div>
+            <div class="range-item" data-range="1" onclick="msSwitchRange(1)">近5年</div>
+            <div class="range-item range-active mingshi" data-range="2" onclick="msSwitchRange(2)">近2年</div>
+            <div class="range-item" data-range="3" onclick="msSwitchRange(3)">近1年</div>
+        </div>
+        <div class="factor-bar" id="ms-factors"></div>
+        <div class="select-row">
+            <span class="select-label">面积图模式</span>
+            <select class="styled-select" id="ms-chart-mode" onchange="msRender()">
+                <option value="area">面积图（不重叠）</option>
+                <option value="stacked">堆积面积图</option>
+                <option value="percent">百分比堆积面积图</option>
+            </select>
+        </div>
+        <div class="chart-card"><canvas class="chart-canvas" id="ms-chart"></canvas></div>
+        <div class="legend" id="ms-legend"></div>
+        <div class="table-card">
+            <span class="table-title" id="ms-table-title">最近 10 期数据</span>
+            <div class="table-header" id="ms-table-header"></div>
+            <div id="ms-table-body"></div>
+        </div>
+        <div class="source-link" onclick="copyLink('mingshi')">
+            <span class="source-link-text" id="ms-source-url"></span>
+            <span class="copy-hint mingshi">点击复制链接</span>
+        </div>
+    </div>
+
+    <!-- BOLL Page (standalone) -->
+    <div class="page" id="page-boll">
+        <div class="meta-card">
+            <div class="meta-source">布林带分析</div>
+            <span class="meta-model boll">均值 ± 2 历史标准差</span>
+            <span class="meta-desc">选择数据源、因子模型和单个因子，查看该因子的时序走势及其布林带（以全部历史数据计算的均值±2标准差作为上下轨）。</span>
+        </div>
+        <div class="select-row">
+            <span class="select-label">数据源</span>
+            <select class="styled-select" id="boll-source" onchange="bollSourceChanged()">
+                <option value="cufe">中央财经大学 FF五因子</option>
+                <option value="ch3">鸣石 CH-3 三因子</option>
+                <option value="ch4">鸣石 CH-4 四因子</option>
+            </select>
+        </div>
+        <div class="select-row">
+            <span class="select-label">数据频率</span>
+            <select class="styled-select" id="boll-freq" onchange="bollFreqChanged()">
+                <option value="monthly">月度</option>
+                <option value="daily">日度</option>
+            </select>
+        </div>
+        <div class="range-bar">
+            <div class="range-item" data-range="0" onclick="bollSwitchRange(0)">全部</div>
+            <div class="range-item" data-range="1" onclick="bollSwitchRange(1)">近5年</div>
+            <div class="range-item range-active boll" data-range="2" onclick="bollSwitchRange(2)">近2年</div>
+            <div class="range-item" data-range="3" onclick="bollSwitchRange(3)">近1年</div>
+        </div>
+        <div class="select-row">
+            <span class="select-label">选择因子</span>
+            <select class="styled-select" id="boll-factor" onchange="bollRender()"><option value="">-- 选择因子 --</option></select>
+        </div>
+        <div class="chart-card"><canvas class="boll-chart-canvas" id="boll-chart"></canvas></div>
+        <div class="boll-stats-card" id="boll-stats" style="display:none;"></div>
+        <div class="table-card">
+            <span class="table-title" id="boll-table-title">最近 10 期数据</span>
+            <div class="table-header" id="boll-table-header"></div>
+            <div id="boll-table-body"></div>
+        </div>
+    </div>
+</div>
+
+<script src="factor_data.js"></script>
+<script>
+var FACTOR_META = {
+    'mkt_rf':{cn:'市场超额收益',en:'Mkt-RF',desc:'市场组合收益减去无风险利率，反映市场整体风险溢价',color:'#e74c3c'},
+    'smb':{cn:'规模因子',en:'SMB',desc:'小市值与大市值组合收益差，反映规模效应',color:'#3498db'},
+    'hml':{cn:'价值因子',en:'HML',desc:'高账面市值比与低账面市值比组合收益差，反映价值溢价',color:'#2ecc71'},
+    'umd':{cn:'动量因子',en:'UMD',desc:'过去赢家与输家收益差，反映动量效应',color:'#f39c12'},
+    'rmw':{cn:'盈利因子',en:'RMW',desc:'高盈利与低盈利组合收益差，反映盈利质量溢价',color:'#9b59b6'},
+    'cma':{cn:'投资因子',en:'CMA',desc:'保守投资与激进投资组合收益差，反映投资模式效应',color:'#1abc9c'},
+    'mktrf':{cn:'市场超额收益',en:'Mkt-RF',desc:'市场组合收益减去无风险利率，反映市场整体风险溢价',color:'#e74c3c'},
+    'SMB':{cn:'规模因子',en:'SMB',desc:'小市值与大市值组合收益差，反映规模效应',color:'#3498db'},
+    'VMG':{cn:'价值因子',en:'VMG',desc:'中国版HML，高估值与低估值组合收益差',color:'#2ecc71'},
+    'PMO':{cn:'动量因子',en:'PMO',desc:'动量因子，过去赢家与输家收益差，反映价格惯性',color:'#f39c12'},
+    'HML':{cn:'价值因子',en:'HML',desc:'高账面市值比与低账面市值比组合收益差',color:'#2ecc71'},
+};
+var DEFAULT_COLORS=['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c'];
+function getFactorInfo(key,index){var m=FACTOR_META[key];if(!m)m={cn:key,en:key,desc:'',color:DEFAULT_COLORS[index%DEFAULT_COLORS.length]};return m;}
+function getColor(key,index){return getFactorInfo(key,index).color;}
+function hexToRgba(hex,alpha){var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return 'rgba('+r+','+g+','+b+','+alpha+')';}
+
+function navigateTo(page){
+    document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+    document.getElementById('page-'+page).classList.add('active');
+    var titles={index:'中国因子模型数据',cufe:'CUFE 五因子模型',mingshi:'鸣石因子模型',boll:'布林带分析'};
+    document.getElementById('navTitle').textContent=titles[page];
+    document.getElementById('navBack').style.display=page==='index'?'none':'inline';
+    if(page==='cufe') setTimeout(cufeRender,50);
+    if(page==='mingshi') setTimeout(msRender,50);
+    if(page==='boll') setTimeout(bollInit,50);
+}
+function goBack(){navigateTo('index');}
+
+// ===== Main Chart: area(non-overlapping) / stacked / percent(100%) =====
+function drawChart(canvas,data,factorKeys,startIdx,mode){
+    if(!data||data.length===0)return;
+    var plotData=data.slice(startIdx||0);
+    if(plotData.length===0)return;
+    var dpr=window.devicePixelRatio||2;
+    var rect=canvas.getBoundingClientRect();
+    var W=rect.width,H=rect.height;
+    canvas.width=W*dpr;canvas.height=H*dpr;
+    var ctx=canvas.getContext('2d');
+    ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
+    var padL=50,padR=20,padT=20,padB=35;
+    var chartW=W-padL-padR,chartH=H-padT-padB;
+    var xStep=chartW/(plotData.length-1>0?plotData.length-1:1);
+
+    // Grid + Y labels + X labels helper
+    function drawAxes(yMin,yMax,yLabelFmt){
+        var valToY=function(v){return padT+chartH*(1-(v-yMin)/(yMax-yMin));};
+        ctx.strokeStyle='#f0f0f0';ctx.lineWidth=1;
+        for(var g=0;g<=5;g++){var gy=padT+(chartH/5)*g;ctx.beginPath();ctx.moveTo(padL,gy);ctx.lineTo(padL+chartW,gy);ctx.stroke();}
+        ctx.fillStyle='#999';ctx.font='10px sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
+        for(var g2=0;g2<=5;g2++){var yVal=yMax-((yMax-yMin)/5)*g2;ctx.fillText(yLabelFmt(yVal),padL-6,padT+(chartH/5)*g2);}
+        if(yMin<0&&yMax>0){ctx.strokeStyle='#ccc';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(padL,valToY(0));ctx.lineTo(padL+chartW,valToY(0));ctx.stroke();ctx.setLineDash([]);}
+        ctx.fillStyle='#999';ctx.textAlign='center';ctx.textBaseline='top';
+        var lc=Math.min(6,plotData.length);
+        for(var l=0;l<lc;l++){var idx=Math.floor((plotData.length-1)*(l/(lc-1)));ctx.fillText(plotData[idx].date,padL+xStep*idx,padT+chartH+6);}
+        return valToY;
+    }
+
+    if(mode==='area'){
+        // Non-overlapping: each factor gets its own vertical band
+        var nF=factorKeys.length;
+        var bandH=chartH/nF; // each factor band height
+        // Per-factor min/max
+        var factorRanges=[];
+        for(var f=0;f<nF;f++){
+            var key=factorKeys[f];
+            var fMin=Infinity,fMax=-Infinity;
+            for(var d=0;d<plotData.length;d++){
+                var v=plotData[d][key];if(v===undefined||v===null)continue;
+                if(v<fMin)fMin=v;if(v>fMax)fMax=v;
+            }
+            if(fMin===Infinity){fMin=0;fMax=0.1;}
+            var fr=fMax-fMin;if(fr===0)fr=0.1;
+            fMin-=fr*0.15;fMax+=fr*0.15;
+            factorRanges.push({min:fMin,max:fMax});
+        }
+        // Draw each factor in its own band
+        for(var f2=0;f2<nF;f2++){
+            var key2=factorKeys[f2],color2=getColor(key2,f2);
+            var fr2=factorRanges[f2];
+            var bandTop=padT+bandH*f2;
+            var bandBot=padT+bandH*(f2+1);
+            var innerPad=8; // padding between bands
+            var drawTop=bandTop+innerPad;
+            var drawBot=bandBot-innerPad;
+            var drawH=drawBot-drawTop;
+            var localValToY=function(v){return drawTop+drawH*(1-(v-fr2.min)/(fr2.max-fr2.min));};
+
+            // Divider line between bands
+            if(f2>0){
+                ctx.strokeStyle='#e5e8eb';ctx.lineWidth=1;ctx.setLineDash([2,2]);
+                ctx.beginPath();ctx.moveTo(padL,bandTop);ctx.lineTo(padL+chartW,bandTop);ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // Factor label (top-left of band)
+            var info=getFactorInfo(key2,f2);
+            ctx.fillStyle=color2;ctx.font='9px sans-serif';ctx.textAlign='left';ctx.textBaseline='top';
+            ctx.fillText(info.cn+'('+info.en+')',padL+2,drawTop+1);
+
+            // Y labels for this band
+            ctx.fillStyle='#aaa';ctx.font='8px sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
+            for(var gl=0;gl<=2;gl++){
+                var yv=fr2.max-((fr2.max-fr2.min)/2)*gl;
+                ctx.fillText(yv.toFixed(2),padL-4,drawTop+(drawH/2)*gl);
+            }
+
+            // Area fill
+            ctx.fillStyle=hexToRgba(color2,0.15);ctx.beginPath();
+            var first=null;
+            for(var d2=0;d2<plotData.length;d2++){
+                var v2=plotData[d2][key2];if(v2===undefined||v2===null)continue;
+                var x=padL+xStep*d2,y=localValToY(v2);
+                if(!first){first={x:x,y:y};ctx.moveTo(x,y);}else{ctx.lineTo(x,y);}
+            }
+            if(first){
+                ctx.lineTo(padL+xStep*(plotData.length-1),drawBot);
+                ctx.lineTo(first.x,drawBot);
+                ctx.closePath();ctx.fill();
+            }
+            // Line
+            ctx.strokeStyle=color2;ctx.lineWidth=1.5;ctx.beginPath();
+            var st=false;
+            for(var d3=0;d3<plotData.length;d3++){
+                var v3=plotData[d3][key2];if(v3===undefined||v3===null)continue;
+                var x2=padL+xStep*d3,y2=localValToY(v3);
+                if(!st){ctx.moveTo(x2,y2);st=true;}else{ctx.lineTo(x2,y2);}
+            }
+            ctx.stroke();
+        }
+        // X labels (only at bottom)
+        ctx.fillStyle='#999';ctx.font='10px sans-serif';ctx.textAlign='center';ctx.textBaseline='top';
+        var lc2=Math.min(6,plotData.length);
+        for(var l2=0;l2<lc2;l2++){var idx2=Math.floor((plotData.length-1)*(l2/(lc2-1)));ctx.fillText(plotData[idx2].date,padL+xStep*idx2,padT+chartH+6);}
+
+    } else if(mode==='stacked'){
+        // Stacked area: positive stacked bottom-up, negative top-down
+        var stPos=[],stNeg=[];
+        for(var i=0;i<plotData.length;i++){
+            var ps=0,ns=0;
+            for(var j=0;j<factorKeys.length;j++){var v=plotData[i][factorKeys[j]];if(v===undefined||v===null)continue;if(v>=0)ps+=v;else ns+=v;}
+            stPos.push(ps);stNeg.push(ns);
+        }
+        var yMin=0,yMax=0;
+        for(var s=0;s<plotData.length;s++){if(stPos[s]>yMax)yMax=stPos[s];if(stNeg[s]<yMin)yMin=stNeg[s];}
+        var range=yMax-yMin;if(range===0)range=0.1;yMin-=range*0.1;yMax+=range*0.1;
+        var valToY2=drawAxes(yMin,yMax,function(v){return v.toFixed(2);});
+
+        var cumPos=new Array(plotData.length).fill(0);
+        var cumNeg=new Array(plotData.length).fill(0);
+        for(var f3=0;f3<factorKeys.length;f3++){
+            var key3=factorKeys[f3],color3=getColor(key3,f3);
+            var newPos=cumPos.slice(),newNeg=cumNeg.slice();
+            for(var d4=0;d4<plotData.length;d4++){
+                var v4=plotData[d4][key3];if(v4===undefined||v4===null)v4=0;
+                if(v4>=0)newPos[d4]+=v4;else newNeg[d4]+=v4;
+            }
+            ctx.fillStyle=hexToRgba(color3,0.35);ctx.beginPath();
+            for(var dp=0;dp<plotData.length;dp++){var xp=padL+xStep*dp,yp=valToY2(newPos[dp]);if(dp===0)ctx.moveTo(xp,yp);else ctx.lineTo(xp,yp);}
+            for(var dp2=plotData.length-1;dp2>=0;dp2--){var xp2=padL+xStep*dp2;var bottom=cumPos[dp2]+newNeg[dp2];ctx.lineTo(xp2,valToY2(bottom));}
+            ctx.closePath();ctx.fill();
+            ctx.strokeStyle=color3;ctx.lineWidth=1;ctx.beginPath();
+            for(var dl=0;dl<plotData.length;dl++){var xl=padL+xStep*dl,yl=valToY2(newPos[dl]);if(dl===0)ctx.moveTo(xl,yl);else ctx.lineTo(xl,yl);}
+            ctx.stroke();
+            cumPos=newPos;cumNeg=newNeg;
+        }
+    } else { // percent: normalize to 100%
+        // For percent mode: only use positive values (factors are typically returns, can be negative)
+        // We use total of absolute values to normalize, then split positive/negative proportionally
+        // Actually for a proper 100% stacked area, we treat each factor's value as contribution
+        // If values can be negative, we normalize by sum of absolute values
+        var yMin2=0,yMax2=1; // 0 to 100%
+        var valToY3=drawAxes(0,1,function(v){return (v*100).toFixed(0)+'%';});
+
+        var cumPct=new Array(plotData.length).fill(0);
+        // Compute abs totals
+        var absTotals=[];
+        for(var i2=0;i2<plotData.length;i2++){
+            var tot=0;
+            for(var j2=0;j2<factorKeys.length;j2++){var v2=plotData[i2][factorKeys[j2]];if(v2===undefined||v2===null)continue;tot+=Math.abs(v2);}
+            absTotals.push(tot===0?0.0001:tot);
+        }
+
+        for(var f4=0;f4<factorKeys.length;f4++){
+            var key4=factorKeys[f4],color4=getColor(key4,f4);
+            var newCum=cumPct.slice();
+            for(var d5=0;d5<plotData.length;d5++){
+                var v5=plotData[d5][key4];if(v5===undefined||v5===null)v5=0;
+                newCum[d5]+=Math.abs(v5)/absTotals[d5];
+            }
+            ctx.fillStyle=hexToRgba(color4,0.35);ctx.beginPath();
+            for(var dp3=0;dp3<plotData.length;dp3++){var xp3=padL+xStep*dp3,yp3=valToY3(newCum[dp3]);if(dp3===0)ctx.moveTo(xp3,yp3);else ctx.lineTo(xp3,yp3);}
+            for(var dp4=plotData.length-1;dp4>=0;dp4--){var xp4=padL+xStep*dp4;ctx.lineTo(xp4,valToY3(cumPct[dp4]));}
+            ctx.closePath();ctx.fill();
+            ctx.strokeStyle=color4;ctx.lineWidth=1;ctx.beginPath();
+            for(var dl2=0;dl2<plotData.length;dl2++){var xl2=padL+xStep*dl2,yl2=valToY3(newCum[dl2]);if(dl2===0)ctx.moveTo(xl2,yl2);else ctx.lineTo(xl2,yl2);}
+            ctx.stroke();
+            cumPct=newCum;
+        }
+    }
+}
+
+// ===== BOLL Chart (single factor, standalone page) =====
+function drawBollChart(canvas,data,factorKey,factorInfo,startIdx){
+    if(!data||data.length===0)return;
+    var plotData=data.slice(startIdx||0);
+    if(plotData.length===0)return;
+    var dpr=window.devicePixelRatio||2;
+    var rect=canvas.getBoundingClientRect();
+    var W=rect.width,H=rect.height;
+    canvas.width=W*dpr;canvas.height=H*dpr;
+    var ctx=canvas.getContext('2d');
+    ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
+    var padL=55,padR=20,padT=30,padB=35;
+    var chartW=W-padL-padR,chartH=H-padT-padB;
+    var color=factorInfo.color;
+
+    // Stats over ALL data
+    var vals=[];
+    for(var i=0;i<data.length;i++){var v=data[i][factorKey];if(v!==undefined&&v!==null)vals.push(v);}
+    if(vals.length===0)return;
+    var sum=0;for(var s=0;s<vals.length;s++)sum+=vals[s];
+    var mean=sum/vals.length;
+    var sqSum=0;for(var s2=0;s2<vals.length;s2++)sqSum+=(vals[s2]-mean)*(vals[s2]-mean);
+    var std=Math.sqrt(sqSum/vals.length);
+    var upper=mean+2*std,lower=mean-2*std;
+
+    var yMin=lower,yMax=upper;
+    for(var i2=0;i2<plotData.length;i2++){var v2=plotData[i2][factorKey];if(v2===undefined||v2===null)continue;if(v2<yMin)yMin=v2;if(v2>yMax)yMax=v2;}
+    var range=yMax-yMin;if(range===0)range=0.1;yMin-=range*0.1;yMax+=range*0.1;
+    var xStep=chartW/(plotData.length-1>0?plotData.length-1:1);
+    var valToY=function(v){return padT+chartH*(1-(v-yMin)/(yMax-yMin));};
+
+    // Title
+    ctx.fillStyle='#1f2329';ctx.font='13px sans-serif';ctx.textAlign='left';ctx.textBaseline='top';
+    ctx.fillText(factorInfo.cn+'('+factorInfo.en+') 布林带',padL,4);
+
+    // Grid
+    ctx.strokeStyle='#f0f0f0';ctx.lineWidth=1;
+    for(var g=0;g<=5;g++){var gy=padT+(chartH/5)*g;ctx.beginPath();ctx.moveTo(padL,gy);ctx.lineTo(padL+chartW,gy);ctx.stroke();}
+    ctx.fillStyle='#999';ctx.font='10px sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
+    for(var g2=0;g2<=5;g2++){var yVal=yMax-((yMax-yMin)/5)*g2;ctx.fillText(yVal.toFixed(3),padL-6,padT+(chartH/5)*g2);}
+    ctx.fillStyle='#999';ctx.textAlign='center';ctx.textBaseline='top';
+    var lc=Math.min(6,plotData.length);
+    for(var l=0;l<lc;l++){var idx=Math.floor((plotData.length-1)*(l/(lc-1)));ctx.fillText(plotData[idx].date,padL+xStep*idx,padT+chartH+6);}
+    if(yMin<0&&yMax>0){ctx.strokeStyle='#ccc';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(padL,valToY(0));ctx.lineTo(padL+chartW,valToY(0));ctx.stroke();ctx.setLineDash([]);}
+
+    // Band fill
+    ctx.fillStyle=hexToRgba(color,0.1);ctx.beginPath();
+    for(var bu=0;bu<plotData.length;bu++){var xu=padL+xStep*bu;if(bu===0)ctx.moveTo(xu,valToY(upper));else ctx.lineTo(xu,valToY(upper));}
+    for(var bl=plotData.length-1;bl>=0;bl--){var xl=padL+xStep*bl;ctx.lineTo(xl,valToY(lower));}
+    ctx.closePath();ctx.fill();
+
+    // Upper/lower dashed
+    ctx.strokeStyle=hexToRgba(color,0.5);ctx.lineWidth=1;ctx.setLineDash([4,3]);
+    ctx.beginPath();for(var u=0;u<plotData.length;u++){var xu2=padL+xStep*u;if(u===0)ctx.moveTo(xu2,valToY(upper));else ctx.lineTo(xu2,valToY(upper));}ctx.stroke();
+    ctx.beginPath();for(var lo=0;lo<plotData.length;lo++){var xlo=padL+xStep*lo;if(lo===0)ctx.moveTo(xlo,valToY(lower));else ctx.lineTo(xlo,valToY(lower));}ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Mean dotted
+    ctx.strokeStyle=hexToRgba(color,0.35);ctx.setLineDash([1,2]);
+    ctx.beginPath();for(var m=0;m<plotData.length;m++){var xm=padL+xStep*m;if(m===0)ctx.moveTo(xm,valToY(mean));else ctx.lineTo(xm,valToY(mean));}ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Factor area + line
+    ctx.fillStyle=hexToRgba(color,0.15);ctx.beginPath();
+    var firstPt=null;
+    for(var d=0;d<plotData.length;d++){var v=plotData[d][factorKey];if(v===undefined||v===null)continue;var x=padL+xStep*d,y=valToY(v);if(!firstPt){firstPt={x:x,y:y};ctx.moveTo(x,y);}else{ctx.lineTo(x,y);}}
+    if(firstPt){ctx.lineTo(padL+xStep*(plotData.length-1),valToY(lower));ctx.lineTo(firstPt.x,valToY(lower));ctx.closePath();ctx.fill();}
+    ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();
+    var st=false;
+    for(var d2=0;d2<plotData.length;d2++){var v2=plotData[d2][factorKey];if(v2===undefined||v2===null)continue;var x2=padL+xStep*d2,y2=valToY(v2);if(!st){ctx.moveTo(x2,y2);st=true;}else{ctx.lineTo(x2,y2);}}
+    ctx.stroke();
+
+    // Store stats for display
+    return {mean:mean,std:std,upper:upper,lower:lower};
+}
+
+// ===== CUFE Page =====
+var CUFE_KEYS=['mkt_rf','smb','hml','umd','rmw','cma'];
+var cufeState={freq:'monthly',rangeIndex:2,factors:[]};
+function cufeInit(){
+    cufeState.factors=CUFE_KEYS.map(function(key,i){var info=getFactorInfo(key,i);return {key:key,cn:info.cn,en:info.en,color:info.color,displayName:info.cn+'('+info.en+')',selected:i<3};});
+    cufeUpdateMeta();cufeRenderFactors();cufeRender();
+}
+function cufeGetData(){return cufeState.freq==='monthly'?FACTOR_DATA.cufe_monthly:FACTOR_DATA.cufe_daily;}
+function cufeGetStartIdx(){var d=cufeGetData().data;var rm=cufeState.freq==='monthly'?[0,60,24,12]:[0,500,250,120];return Math.max(0,d.length-rm[cufeState.rangeIndex]);}
+function cufeUpdateMeta(){var d=cufeGetData();document.getElementById('cufe-model').textContent=d.meta.model;document.getElementById('cufe-desc').textContent=d.meta.description;document.getElementById('cufe-freq').textContent=cufeState.freq==='monthly'?'月度':'日度';document.getElementById('cufe-update').textContent=d.meta.lastUpdate;document.getElementById('cufe-count').textContent=d.data.length+' 条';document.getElementById('cufe-source-url').textContent='数据来源: '+d.meta.sourceUrl;}
+function cufeRenderFactors(){var html='';cufeState.factors.forEach(function(f,i){html+='<div class="factor-chip '+(f.selected?'factor-selected cufe':'')+'" onclick="cufeToggleFactor('+i+')"><div class="factor-dot" style="background:'+f.color+'"></div><span class="factor-chip-text">'+f.displayName+'</span></div>';});document.getElementById('cufe-factors').innerHTML=html;}
+function cufeSwitchFreq(freq){cufeState.freq=freq;document.querySelectorAll('#page-cufe .tab-item').forEach(function(el){el.classList.toggle('tab-active',el.dataset.freq===freq);});cufeUpdateMeta();cufeRender();}
+function cufeSwitchRange(idx){cufeState.rangeIndex=idx;document.querySelectorAll('#page-cufe .range-item').forEach(function(el){el.classList.toggle('range-active',parseInt(el.dataset.range)===idx);});cufeRender();}
+function cufeToggleFactor(i){cufeState.factors[i].selected=!cufeState.factors[i].selected;cufeRenderFactors();cufeRender();}
+function cufeRender(){
+    var data=cufeGetData().data,startIdx=cufeGetStartIdx(),plotData=data.slice(startIdx);
+    var sel=cufeState.factors.filter(function(f){return f.selected;});
+    var keys=sel.map(function(f){return f.key;});
+    var lh='';sel.forEach(function(f){lh+='<div class="legend-item"><div class="legend-dot" style="background:'+f.color+'"></div><span class="legend-name">'+f.displayName+'</span></div>';});
+    document.getElementById('cufe-legend').innerHTML=lh;
+    var td2=[],sc=Math.min(10,plotData.length);
+    for(var j=plotData.length-sc;j<plotData.length;j++){var row=plotData[j],vals=[];for(var k=0;k<keys.length;k++){var v=row[keys[k]];vals.push(v!==undefined&&v!==null?{text:(v*100).toFixed(2)+'%',pos:v>=0}:{text:'-',pos:true});}td2.push({date:row.date,values:vals});}
+    var hh='<span class="th th-date">日期</span>';sel.forEach(function(f){hh+='<span class="th">'+f.displayName+'</span>';});
+    document.getElementById('cufe-table-header').innerHTML=hh;
+    document.getElementById('cufe-table-title').textContent='最近 '+td2.length+' 期数据';
+    var bh='';td2.forEach(function(row){bh+='<div class="table-row"><span class="td td-date">'+row.date+'</span>';row.values.forEach(function(v){bh+='<span class="td '+(v.pos?'td-pos':'td-neg')+'">'+v.text+'</span>';});bh+='</div>';});
+    document.getElementById('cufe-table-body').innerHTML=bh;
+    var mode=document.getElementById('cufe-chart-mode').value;
+    if(keys.length>0)drawChart(document.getElementById('cufe-chart'),data,keys,startIdx,mode);
+}
+
+// ===== Mingshi Page =====
+var CH3_KEYS=['mktrf','SMB','VMG'];
+var CH4_KEYS=['mktrf','SMB','VMG','PMO'];
+var msState={model:'ch3',freq:'monthly',rangeIndex:2,factors:[]};
+function msInit(){msApplyModel('ch3');}
+function msGetData(){
+    if(msState.model==='ch3')return msState.freq==='monthly'?FACTOR_DATA.mingshi_ch3_monthly:FACTOR_DATA.mingshi_ch3_daily;
+    return msState.freq==='monthly'?FACTOR_DATA.mingshi_ch4_monthly:FACTOR_DATA.mingshi_ch4_daily;
+}
+function msGetStartIdx(){var d=msGetData().data;var rm=msState.freq==='monthly'?[0,60,24,12]:[0,500,250,120];return Math.max(0,d.length-rm[msState.rangeIndex]);}
+function msApplyModel(model){
+    msState.model=model;
+    var keys=model==='ch3'?CH3_KEYS:CH4_KEYS;
+    msState.factors=keys.map(function(key,i){var info=getFactorInfo(key,i);return {key:key,cn:info.cn,en:info.en,color:info.color,displayName:info.cn+'('+info.en+')',selected:true};});
+    msState.freq='monthly';
+    document.querySelectorAll('#page-mingshi .model-item').forEach(function(el){el.classList.toggle('model-active',el.dataset.model===model);});
+    var dailyTab=document.querySelector('#ms-freq-bar [data-freq="daily"]');
+    var monthlyTab=document.querySelector('#ms-freq-bar [data-freq="monthly"]');
+    monthlyTab.classList.add('tab-active');
+    dailyTab.classList.remove('tab-active','disabled');
+    if(document.getElementById('ch4-note'))document.getElementById('ch4-note').remove();
+    msUpdateMeta();msRenderFactors();msRender();
+}
+function msUpdateMeta(){var d=msGetData();document.getElementById('ms-model').textContent=d.meta.model;document.getElementById('ms-desc').textContent=d.meta.description;document.getElementById('ms-freq').textContent=msState.freq==='monthly'?'月度':'日度';document.getElementById('ms-update').textContent=d.meta.lastUpdate;document.getElementById('ms-count').textContent=d.data.length+' 条';document.getElementById('ms-source-url').textContent='数据来源: '+d.meta.sourceUrl;}
+function msRenderFactors(){var html='';msState.factors.forEach(function(f,i){html+='<div class="factor-chip '+(f.selected?'factor-selected mingshi':'')+'" onclick="msToggleFactor('+i+')"><div class="factor-dot" style="background:'+f.color+'"></div><span class="factor-chip-text">'+f.displayName+'</span></div>';});document.getElementById('ms-factors').innerHTML=html;}
+function msSwitchModel(model){msApplyModel(model);}
+function msSwitchFreq(freq){msState.freq=freq;document.querySelectorAll('#page-mingshi .tab-item').forEach(function(el){el.classList.toggle('tab-active',el.dataset.freq===freq);});msUpdateMeta();msRender();}
+function msSwitchRange(idx){msState.rangeIndex=idx;document.querySelectorAll('#page-mingshi .range-item').forEach(function(el){el.classList.toggle('range-active',parseInt(el.dataset.range)===idx);});msRender();}
+function msToggleFactor(i){msState.factors[i].selected=!msState.factors[i].selected;msRenderFactors();msRender();}
+function msRender(){
+    var data=msGetData().data,startIdx=msGetStartIdx(),plotData=data.slice(startIdx);
+    var sel=msState.factors.filter(function(f){return f.selected;});
+    var keys=sel.map(function(f){return f.key;});
+    var lh='';sel.forEach(function(f){lh+='<div class="legend-item"><div class="legend-dot" style="background:'+f.color+'"></div><span class="legend-name">'+f.displayName+'</span></div>';});
+    document.getElementById('ms-legend').innerHTML=lh;
+    var td2=[],sc=Math.min(10,plotData.length);
+    for(var j=plotData.length-sc;j<plotData.length;j++){var row=plotData[j],vals=[];for(var k=0;k<keys.length;k++){var v=row[keys[k]];vals.push(v!==undefined&&v!==null?{text:(v*100).toFixed(2)+'%',pos:v>=0}:{text:'-',pos:true});}td2.push({date:row.date,values:vals});}
+    var hh='<span class="th th-date">日期</span>';sel.forEach(function(f){hh+='<span class="th">'+f.displayName+'</span>';});
+    document.getElementById('ms-table-header').innerHTML=hh;
+    document.getElementById('ms-table-title').textContent='最近 '+td2.length+' 期数据';
+    var bh='';td2.forEach(function(row){bh+='<div class="table-row"><span class="td td-date">'+row.date+'</span>';row.values.forEach(function(v){bh+='<span class="td '+(v.pos?'td-pos':'td-neg')+'">'+v.text+'</span>';});bh+='</div>';});
+    document.getElementById('ms-table-body').innerHTML=bh;
+    var mode=document.getElementById('ms-chart-mode').value;
+    if(keys.length>0)drawChart(document.getElementById('ms-chart'),data,keys,startIdx,mode);
+}
+
+// ===== BOLL Page (standalone) =====
+var bollState={source:'cufe',freq:'monthly',rangeIndex:2,selectedFactor:''};
+var BOLL_FACTOR_MAP={
+    'cufe':CUFE_KEYS,
+    'ch3':CH3_KEYS,
+    'ch4':CH4_KEYS,
+};
+function bollInit(){
+    bollPopulateFactors();
+    bollRender();
+}
+function bollGetData(){
+    if(bollState.source==='cufe')return bollState.freq==='monthly'?FACTOR_DATA.cufe_monthly:FACTOR_DATA.cufe_daily;
+    if(bollState.source==='ch3')return bollState.freq==='monthly'?FACTOR_DATA.mingshi_ch3_monthly:FACTOR_DATA.mingshi_ch3_daily;
+    return bollState.freq==='monthly'?FACTOR_DATA.mingshi_ch4_monthly:FACTOR_DATA.mingshi_ch4_daily;
+}
+function bollGetStartIdx(){var d=bollGetData().data;var rm=bollState.freq==='monthly'?[0,60,24,12]:[0,500,250,120];return Math.max(0,d.length-rm[bollState.rangeIndex]);}
+function bollPopulateFactors(){
+    var keys=BOLL_FACTOR_MAP[bollState.source];
+    var sel=document.getElementById('boll-factor');
+    var html='<option value="">-- 选择因子 --</option>';
+    keys.forEach(function(key,i){
+        var info=getFactorInfo(key,i);
+        html+='<option value="'+key+'">'+info.cn+'('+info.en+')</option>';
+    });
+    sel.innerHTML=html;
+    bollState.selectedFactor='';
+}
+function bollSourceChanged(){
+    bollPopulateFactors();
+    bollRender();
+}
+function bollFreqChanged(){
+    bollRender();
+}
+function bollSwitchRange(idx){
+    bollState.rangeIndex=idx;
+    document.querySelectorAll('#page-boll .range-item').forEach(function(el){el.classList.toggle('range-active',parseInt(el.dataset.range)===idx);});
+    bollRender();
+}
+function bollRender(){
+    var data=bollGetData().data;
+    var startIdx=bollGetStartIdx();
+    var plotData=data.slice(startIdx);
+    var factorKey=document.getElementById('boll-factor').value;
+    bollState.selectedFactor=factorKey;
+
+    var canvas=document.getElementById('boll-chart');
+    var statsCard=document.getElementById('boll-stats');
+    var tableHeader=document.getElementById('boll-table-header');
+    var tableBody=document.getElementById('boll-table-body');
+    var tableTitle=document.getElementById('boll-table-title');
+
+    if(!factorKey){
+        // Clear canvas
+        var dpr=window.devicePixelRatio||2;
+        var rect=canvas.getBoundingClientRect();
+        canvas.width=rect.width*dpr;canvas.height=rect.height*dpr;
+        var ctx=canvas.getContext('2d');
+        ctx.scale(dpr,dpr);ctx.clearRect(0,0,rect.width,rect.height);
+        ctx.fillStyle='#bbb';ctx.font='14px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText('请在上方下拉框选择一个因子',rect.width/2,rect.height/2);
+        statsCard.style.display='none';
+        tableHeader.innerHTML='';
+        tableBody.innerHTML='';
+        tableTitle.textContent='请先选择因子';
+        return;
+    }
+
+    var info=getFactorInfo(factorKey,0);
+    // Find from map for proper index
+    var keys=BOLL_FACTOR_MAP[bollState.source];
+    var idx=keys.indexOf(factorKey);
+    if(idx>=0) info=getFactorInfo(factorKey,idx);
+
+    var stats=drawBollChart(canvas,data,factorKey,info,startIdx);
+
+    // Stats card
+    statsCard.style.display='block';
+    statsCard.innerHTML=
+        '<div style="font-weight:600;color:#1f2329;margin-bottom:4px;">'+info.cn+'('+info.en+') 统计指标</div>'+
+        '<div class="boll-stats-row"><span class="boll-stats-label">历史均值</span><span class="boll-stats-value">'+stats.mean.toFixed(4)+'</span></div>'+
+        '<div class="boll-stats-row"><span class="boll-stats-label">历史标准差</span><span class="boll-stats-value">'+stats.std.toFixed(4)+'</span></div>'+
+        '<div class="boll-stats-row"><span class="boll-stats-label">上轨（均值+2σ）</span><span class="boll-stats-value" style="color:#e74c3c">'+stats.upper.toFixed(4)+'</span></div>'+
+        '<div class="boll-stats-row"><span class="boll-stats-label">下轨（均值-2σ）</span><span class="boll-stats-value" style="color:#2ecc71">'+stats.lower.toFixed(4)+'</span></div>';
+
+    // Table
+    var td2=[],sc=Math.min(10,plotData.length);
+    for(var j=plotData.length-sc;j<plotData.length;j++){
+        var row=plotData[j];
+        var v=row[factorKey];
+        td2.push({date:row.date,value:v!==undefined&&v!==null?{text:(v*100).toFixed(2)+'%',pos:v>=0}:{text:'-',pos:true},
+            band:v!==undefined&&v!==null?(v>stats.upper?'突破上轨':v<stats.lower?'突破下轨':'带内'):'-'});
+    }
+    tableHeader.innerHTML='<span class="th th-date">日期</span><span class="th">'+info.cn+'('+info.en+')</span><span class="th">位置</span>';
+    tableTitle.textContent='最近 '+td2.length+' 期数据';
+    var bh='';
+    td2.forEach(function(row){
+        bh+='<div class="table-row"><span class="td td-date">'+row.date+'</span>';
+        bh+='<span class="td '+(row.value.pos?'td-pos':'td-neg')+'">'+row.value.text+'</span>';
+        var posColor=row.band==='突破上轨'?'#e74c3c':row.band==='突破下轨'?'#2ecc71':'#8a8f99';
+        bh+='<span class="td" style="color:'+posColor+'">'+row.band+'</span>';
+        bh+='</div>';
+    });
+    tableBody.innerHTML=bh;
+}
+
+function copyLink(source){
+    var url=source==='cufe'?FACTOR_DATA.cufe_monthly.meta.sourceUrl:FACTOR_DATA.mingshi_ch3_monthly.meta.sourceUrl;
+    if(navigator.clipboard){navigator.clipboard.writeText(url).then(function(){alert('链接已复制: '+url);});}
+    else{alert('链接: '+url);}
+}
+
+cufeInit();msInit();
+/* --- sync home-card "更新至" labels with the loaded factor data (added by build_site.py) --- */
+(function () {
+  try {
+    var cards = document.querySelectorAll('#page-index .source-card .source-update');
+    var pairs = [[0, 'cufe_monthly'], [1, 'mingshi_ch3_monthly']];
+    pairs.forEach(function (p) {
+      var ds = FACTOR_DATA[p[1]];
+      if (cards[p[0]] && ds && ds.meta && ds.meta.lastUpdate) {
+        cards[p[0]].textContent = '更新至 ' + ds.meta.lastUpdate;
+      }
+    });
+  } catch (e) { /* keep the static labels */ }
+})();
+
+</script>
+<div id="cmpOverlay">
+  <div class="frame-wrap"><iframe id="cmpFrame" src="about:blank" title="指数 × 因子 对比分析" allow="fullscreen" allowfullscreen></iframe></div>
+  <button id="cmpClose" onclick="closeCompare()">✕ 关闭</button>
+</div>
+<script>
+function openCompare() {
+  var f = document.getElementById('cmpFrame');
+  if (f.getAttribute('src') !== 'compare.html') f.setAttribute('src', 'compare.html');
+  document.getElementById('cmpOverlay').classList.add('on');
+  document.body.style.overflow = 'hidden';
+}
+function closeCompare() {
+  document.getElementById('cmpOverlay').classList.remove('on');
+  document.body.style.overflow = '';
+}
+window.addEventListener('message', function (e) { if (e.data === 'closeCompare') closeCompare(); });
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeCompare(); });
+</script>
+</body>
+</html>
